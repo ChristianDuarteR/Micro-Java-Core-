@@ -1,0 +1,27 @@
+# Compilación y artefactos
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Logs y bases de datos locales
+*.log
+*.sqlite
+
+# IDEs y configuración de entorno
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# Maven Wrapper & Variables de entorno
+.mvn/
+mvnw
+mvnw.cmd
+.env

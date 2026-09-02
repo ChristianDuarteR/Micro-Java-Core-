@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  java-core-ms:
+    build: .
+    container_name: java_core_ms
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/global_invoice
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres_password
+    networks:
+      - global-invoice-net
+
+networks:
+  global-invoice-net:
+    external: true
