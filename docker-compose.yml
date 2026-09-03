@@ -15,7 +15,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - INTERNAL_API_KEY=${INTERNAL_API_KEY}
       - METRICS_BASE_URL=${METRICS_BASE_URL:-http://python-metrics-ms:5000}
-      - CORS_ORIGINS=https://micro-python.onrender.com,https://global-invoice-virid.vercel.app
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://micro-python.onrender.com,https://global-invoice-virid.vercel.app}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
     networks:
       - global-invoice-net
 
