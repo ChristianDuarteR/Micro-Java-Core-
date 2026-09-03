@@ -9,13 +9,13 @@ services:
     env_file:
       - .env
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST:-postgres-db}:${DB_PORT:-5432}/${DB_NAME:-global_invoice}
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres_password}
       - JWT_SECRET=${JWT_SECRET}
       - INTERNAL_API_KEY=${INTERNAL_API_KEY}
       - METRICS_BASE_URL=${METRICS_BASE_URL:-http://python-metrics-ms:5000}
-      - CORS_ORIGINS=http://localhost:4200
+      - CORS_ORIGINS=https://micro-python.onrender.com,https://global-invoice-virid.vercel.app
     networks:
       - global-invoice-net
 
