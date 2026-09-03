@@ -42,4 +42,26 @@ class ClientServiceTest {
                 .findByNameContainingIgnoreCaseOrDocumentNumberContainingIgnoreCaseOrEmailContainingIgnoreCase(
                         "Acme", "Acme", "Acme", pageRequest);
     }
+
+        @Test
+        void findPageListsAllClientsWhenQueryIsBlank() {
+                PageRequest pageRequest = PageRequest.of(0, 10);
+                when(clientRepository.findAll(pageRequest)).thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+
+                var page = new ClientService(clientRepository).findPage("   ", pageRequest);
+
+                assertThat(page).isEmpty();
+                verify(clientRepository).findAll(pageRequest);
+        }
+
+        @Test
+        void findPageListsAllClientsWhenQueryIsNull() {
+                PageRequest pageRequest = PageRequest.of(0, 10);
+                when(clientRepository.findAll(pageRequest)).thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+
+                var page = new ClientService(clientRepository).findPage(null, pageRequest);
+
+                assertThat(page).isEmpty();
+                verify(clientRepository).findAll(pageRequest);
+        }
 }
