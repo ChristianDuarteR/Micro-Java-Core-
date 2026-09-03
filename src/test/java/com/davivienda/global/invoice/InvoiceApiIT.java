@@ -64,7 +64,7 @@ class InvoiceApiIT {
     }
 
     @Test
-    void operadorCanCreateAndListButAuditorCannotCreate() throws Exception {
+    void operadorAndAuditorCanBothCreateInvoices() throws Exception {
         String operadorToken = login("operador", "Operador123!");
         String auditorToken = login("auditor", "Auditor123!");
 
@@ -92,7 +92,7 @@ class InvoiceApiIT {
                                   "clientId": 1
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/invoices")
                         .header("Authorization", "Bearer " + auditorToken))

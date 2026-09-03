@@ -61,10 +61,9 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        // 4. Cambiado a hasAuthority / hasAnyAuthority (acepta 'OPERADOR' sin requerir 'ROLE_')
                         .requestMatchers(HttpMethod.POST, "/api/invoices", "/api/invoices/**")
-                            .hasAnyAuthority("OPERADOR", "ROLE_OPERADOR")
-                        
+                            .authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/api/invoices", "/api/invoices/**")
                             .hasAnyAuthority("OPERADOR", "ROLE_OPERADOR", "AUDITOR", "ROLE_AUDITOR")
                         
