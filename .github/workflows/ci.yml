@@ -2,13 +2,24 @@ name: Java CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches:
+      - main
+      - master
+      - develop
   pull_request:
-    branches: [main, master, develop]
+    branches:
+      - main
+      - master
+      - develop
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test-and-build:
+    name: Tests and Docker Build
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +30,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
 
       - name: Run tests and coverage
@@ -27,3 +38,37 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t global-invoice-java:${{ github.sha }} .
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "zulu"
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=ChristianDuarteR_Micro-Java-Core -Dsonar.organization=christianduarter -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
