@@ -23,8 +23,7 @@ jobs:
           cache: maven
 
       - name: Run tests and coverage
-        run: ./mvnw -B verify
-        shell: bash
+        run: mvn -B verify
 
       - name: Build Docker image
         run: docker build -t global-invoice-java:${{ github.sha }} .
