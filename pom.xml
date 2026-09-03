@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<jjwt.version>0.12.6</jjwt.version>
+		<sonar.organization>christianduarter</sonar.organization>
 		<jacoco.version>0.8.12</jacoco.version>
 	</properties>
 	<dependencies>
