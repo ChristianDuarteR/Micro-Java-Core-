@@ -4,6 +4,27 @@ Microservicio transaccional de facturas: motor tributario dinámico (Strategy / 
 
 Comparte PostgreSQL con el micro de métricas en Python. Este servicio **escribe** facturas; Python solo **agrega** para el dashboard.
 
+## Calidad de Código y Métricas (SonarQube via GitHub Actions)
+
+Este microservicio ejecuta automáticamente las pruebas unitarias e integración, la generación de cobertura y el análisis estático de código en cada `push` o `pull_request` a la rama principal a través de **GitHub Actions**.
+
+### Badges de Estado
+
+![CI Workflow](https://github.com/ChristianDuarteR/Micro-Java-Core-/actions/workflows/ci.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ChristianDuarteR_Micro-Java-Core-&metric=alert_status)](https://sonarcloud.io/summary/overall?id=ChristianDuarteR_Micro-Java-Core-)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ChristianDuarteR_Micro-Java-Core-&metric=coverage)](https://sonarcloud.io/summary/overall?id=ChristianDuarteR_Micro-Java-Core-)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ChristianDuarteR_Micro-Java-Core-&metric=bugs)](https://sonarcloud.io/summary/overall?id=ChristianDuarteR_Micro-Java-Core-)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ChristianDuarteR_Micro-Java-Core-&metric=vulnerabilities)](https://sonarcloud.io/summary/overall?id=ChristianDuarteR_Micro-Java-Core-)
+
+### Flujo Automático en CI
+
+El pipeline de GitHub Actions realiza los siguientes pasos de forma automatizada:
+
+1. **Configuración del entorno:** Prepara JDK 17 / JDK 21 con caché de dependencias Maven/Gradle.
+2. **Ejecución de Pruebas & Cobertura:** Corre la suite de tests unitarios y genera el reporte de cobertura XML mediante JaCoCo (`jacoco-maven-plugin`).
+3. **Análisis de SonarQube / SonarCloud:** Envía las métricas de cobertura, vulnerabilidades, deuda técnica, bugs y code smells a SonarQube.
+
+
 ---
 
 ## Tecnologías
