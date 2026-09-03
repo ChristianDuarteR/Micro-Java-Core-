@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
-	Page<Invoice> findByClientNameContainingIgnoreCase(String clientName, Pageable pageable);
+	Page<Invoice> findByClient_NameContainingIgnoreCase(String clientName, Pageable pageable);
 
 	Page<Invoice> findByType(InvoiceType type, Pageable pageable);
 }

@@ -27,7 +27,7 @@ public record InvoiceResponse(
                 invoice.getWithholding(),
                 invoice.getTotal(),
                 invoice.getCustomsCode(),
-                invoice.getClientName(),
+                invoice.getClient().getName(),
                 invoice.getDescription(),
                 invoice.getCreatedAt(),
                 invoice.getCreatedBy()

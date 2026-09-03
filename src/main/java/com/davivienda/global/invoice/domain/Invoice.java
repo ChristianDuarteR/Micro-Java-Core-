@@ -2,6 +2,9 @@ package com.davivienda.global.invoice.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -48,8 +51,9 @@ public class Invoice {
     @Column(name = "customs_code")
     private String customsCode;
 
-    @Column(name = "client_name", nullable = false)
-    private String clientName;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
     private String description;
 

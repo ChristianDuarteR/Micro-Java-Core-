@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.davivienda.global.invoice.client.MetricsEventClient;
+import com.davivienda.global.invoice.domain.Client;
 import com.davivienda.global.invoice.domain.Invoice;
 import com.davivienda.global.invoice.domain.InvoiceType;
 import com.davivienda.global.invoice.dto.CreateInvoiceRequest;
@@ -15,6 +16,7 @@ import com.davivienda.global.invoice.event.InvoiceEventHub;
 import com.davivienda.global.invoice.exception.BusinessException;
 import com.davivienda.global.invoice.exception.ResourceNotFoundException;
 import com.davivienda.global.invoice.repository.InvoiceRepository;
+import com.davivienda.global.invoice.repository.ClientRepository;
 import com.davivienda.global.invoice.soap.NumberConversionClient;
 import com.davivienda.global.invoice.tax.ExportacionTaxStrategy;
 import com.davivienda.global.invoice.tax.GubernamentalTaxStrategy;
@@ -38,6 +40,8 @@ class InvoiceServiceTest {
 
     @Mock
     private InvoiceRepository invoiceRepository;
+        @Mock
+        private ClientRepository clientRepository;
     @Mock
     private NumberConversionClient numberConversionClient;
     @Mock
@@ -52,19 +56,19 @@ class InvoiceServiceTest {
         TaxStrategyRegistry registry = new TaxStrategyRegistry(
                 List.of(new NacionalTaxStrategy(), new ExportacionTaxStrategy(), new GubernamentalTaxStrategy()));
         invoiceService = new InvoiceService(
-                invoiceRepository, registry, numberConversionClient, invoiceEventHub, metricsEventClient);
+                invoiceRepository, clientRepository, registry, numberConversionClient, invoiceEventHub, metricsEventClient);
     }
 
     @Test
     void createNacionalPublishesEvent() {
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(Client.builder().id(1L).name("Acme").build()));
         when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
             Invoice invoice = invocation.getArgument(0);
             invoice.setId(1L);
             return invoice;
         });
         var request = new CreateInvoiceRequest(
-                InvoiceType.NACIONAL, new BigDecimal("100"), "Acme", null, "Servicio");
-
+                InvoiceType.NACIONAL, new BigDecimal("100"), 1L, null, "Servicio");
         var response = invoiceService.create(request, "operador");
 
         assertThat(response.total()).isEqualByComparingTo("119.00");
@@ -78,26 +82,27 @@ class InvoiceServiceTest {
     @Test
     void exportRequiresCustomsCode() {
         var request = new CreateInvoiceRequest(
-                InvoiceType.EXPORTACION, new BigDecimal("100"), "Acme", " ", null);
+                InvoiceType.EXPORTACION, new BigDecimal("100"), 1L, " ", null);
         assertThatThrownBy(() -> invoiceService.create(request, "operador"))
                 .isInstanceOf(BusinessException.class);
     }
 
     @Test
     void exportStoresCustomsCodeAndIgnoresItForOtherTypes() {
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(Client.builder().id(1L).name("Acme").build()));
         when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
             Invoice invoice = invocation.getArgument(0);
             invoice.setId(1L);
             return invoice;
         });
         var export = invoiceService.create(
-                new CreateInvoiceRequest(InvoiceType.EXPORTACION, new BigDecimal("50"), "Acme", "ADU-1", null),
+                new CreateInvoiceRequest(InvoiceType.EXPORTACION, new BigDecimal("50"), 1L, "ADU-1", null),
                 "operador");
         assertThat(export.customsCode()).isEqualTo("ADU-1");
         assertThat(export.total()).isEqualByComparingTo("50.00");
 
         var nacional = invoiceService.create(
-                new CreateInvoiceRequest(InvoiceType.NACIONAL, new BigDecimal("50"), "Acme", "SHOULD-DROP", null),
+                new CreateInvoiceRequest(InvoiceType.NACIONAL, new BigDecimal("50"), 1L, "SHOULD-DROP", null),
                 "operador");
         assertThat(nacional.customsCode()).isNull();
     }
@@ -111,7 +116,7 @@ class InvoiceServiceTest {
                 .iva(new BigDecimal("19.00"))
                 .withholding(new BigDecimal("5.00"))
                 .total(new BigDecimal("114.00"))
-                .clientName("Gov")
+                .client(Client.builder().id(1L).name("Gov").build())
                 .createdAt(Instant.parse("2026-01-01T00:00:00Z"))
                 .createdBy("operador")
                 .build();
@@ -129,18 +134,18 @@ class InvoiceServiceTest {
                 .iva(new BigDecimal("19.00"))
                 .withholding(new BigDecimal("0.00"))
                 .total(new BigDecimal("119.00"))
-                .clientName("Acme Corp")
+                .client(Client.builder().id(1L).name("Acme Corp").build())
                 .createdAt(Instant.now())
                 .createdBy("operador")
                 .build();
         PageRequest pageRequest = PageRequest.of(0, 10);
-        when(invoiceRepository.findByClientNameContainingIgnoreCase("Acme", pageRequest))
+        when(invoiceRepository.findByClient_NameContainingIgnoreCase("Acme", pageRequest))
                 .thenReturn(new PageImpl<>(List.of(invoice), pageRequest, 1));
 
         var page = invoiceService.findPage(" Acme ", pageRequest);
 
         assertThat(page.getContent()).hasSize(1).first().extracting("clientName").isEqualTo("Acme Corp");
-        verify(invoiceRepository).findByClientNameContainingIgnoreCase("Acme", pageRequest);
+        verify(invoiceRepository).findByClient_NameContainingIgnoreCase("Acme", pageRequest);
     }
 
     @Test
@@ -164,7 +169,7 @@ class InvoiceServiceTest {
                 .iva(new BigDecimal("28.50"))
                 .withholding(new BigDecimal("0.00"))
                 .total(new BigDecimal("178.50"))
-                .clientName("Acme")
+                .client(Client.builder().id(1L).name("Acme").build())
                 .createdAt(Instant.now())
                 .createdBy("operador")
                 .build();

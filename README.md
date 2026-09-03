@@ -56,6 +56,17 @@ Parámetros opcionales del listado:
 
 Ejemplo: `GET /api/invoices?q=Acme&page=0&size=10`.
 
+### Clientes
+
+* `GET /api/clients` — OPERADOR y AUDITOR. Consulta paginada para el dropdown de alta de facturas.
+
+Parámetros opcionales:
+
+* `q` — busca por nombre, número de documento o email, sin distinción entre mayúsculas y minúsculas.
+* `page`, `size`, `sort` — paginación y orden, con valores por defecto `0`, `10` y `name,asc`.
+
+Ejemplo: `GET /api/clients?q=Acme&page=0&size=10`.
+
 ### Dashboard (Python — usar esto en el front)
 
 * `GET http://localhost:5000/api/v1/metrics/by-type` — **AUDITOR**, `Authorization: Bearer <jwt>`
@@ -66,7 +77,7 @@ No hace falta SSE de Java ni refetch a BD: el WS de Python ya empuja el agregado
 
 ### Tabla `invoices` (Python)
 
-Columnas: `id`, `invoice_type`, `subtotal`, `iva`, `withholding`, `total`, `customs_code`, `client_name`, `description`, `created_at`, `created_by`.
+Columnas: `id`, `invoice_type`, `subtotal`, `iva`, `withholding`, `total`, `customs_code`, `client_id`, `description`, `created_at`, `created_by`.
 
 Al crear, Java notifica a Python:
 
@@ -82,7 +93,7 @@ Copia el mismo `JWT_SECRET` e `INTERNAL_API_KEY` del `.env` de Python.
 {
   "type": "NACIONAL | EXPORTACION | GUBERNAMENTAL",
   "subtotal": 100.00,
-  "clientName": "Acme",
+  "clientId": 1,
   "customsCode": "solo EXPORTACION, obligatorio",
   "description": "opcional"
 }
@@ -119,6 +130,22 @@ Postgres (carpeta `mysql/docker-compose.yml` del repo) y luego:
 ```bash
 docker compose up --build
 ```
+
+Para recrear la base local una sola vez con la relación `clients` → `invoices`:
+
+```bash
+docker compose down -v
+SPRING_JPA_HIBERNATE_DDL_AUTO=create docker compose up --build
+```
+
+Después de confirmar que los clientes iniciales fueron sembrados, reinicia normalmente:
+
+```bash
+docker compose down
+docker compose up --build
+```
+
+El valor normal es `update`, para conservar los datos en los siguientes arranques.
 
 Health: `GET http://localhost:8080/api/health`
 
