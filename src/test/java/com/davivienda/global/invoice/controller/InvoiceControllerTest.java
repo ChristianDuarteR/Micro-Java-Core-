@@ -20,6 +20,7 @@ import com.davivienda.global.invoice.service.InvoiceService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.PageImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -66,10 +67,14 @@ class InvoiceControllerTest {
 
     @Test
     void listAndEvents() throws Exception {
-        when(invoiceService.findAll()).thenReturn(List.of());
+                when(invoiceService.findPage(eq("Acme"), any())).thenReturn(new PageImpl<>(List.of()));
         when(invoiceEventHub.subscribe()).thenReturn(new SseEmitter(0L));
 
-        mockMvc.perform(get("/api/invoices").with(user("auditor").roles("AUDITOR")))
+        mockMvc.perform(get("/api/invoices")
+                        .param("q", "Acme")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .with(user("auditor").roles("AUDITOR")))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/invoices/events").with(user("auditor").roles("AUDITOR")))
                 .andExpect(status().isOk());

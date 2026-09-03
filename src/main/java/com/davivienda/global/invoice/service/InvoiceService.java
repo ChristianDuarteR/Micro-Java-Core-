@@ -17,6 +17,8 @@ import com.davivienda.global.invoice.tax.TaxStrategyRegistry;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -80,6 +82,21 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
+    public Page<InvoiceResponse> findPage(String query, Pageable pageable) {
+        String normalizedQuery = query == null ? "" : query.trim();
+        Page<Invoice> invoices;
+        if (normalizedQuery.isBlank()) {
+            invoices = invoiceRepository.findAll(pageable);
+        } else {
+            InvoiceType type = parseType(normalizedQuery);
+            invoices = type == null
+                    ? invoiceRepository.findByClientNameContainingIgnoreCase(normalizedQuery, pageable)
+                    : invoiceRepository.findByType(type, pageable);
+        }
+        return invoices.map(InvoiceResponse::from);
+    }
+
+    @Transactional(readOnly = true)
     public InvoiceDetailResponse findById(Long id) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Factura no encontrada: " + id));
@@ -91,6 +108,14 @@ public class InvoiceService {
         if (request.type() == InvoiceType.EXPORTACION
                 && (request.customsCode() == null || request.customsCode().isBlank())) {
             throw new BusinessException("El código aduanero es obligatorio para facturas de exportación");
+        }
+    }
+
+    private InvoiceType parseType(String query) {
+        try {
+            return InvoiceType.valueOf(query.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
         }
     }
 }

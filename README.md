@@ -44,8 +44,17 @@ Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagge
 ### Facturas
 
 * `POST /api/invoices` — **OPERADOR**
-* `GET /api/invoices` — OPERADOR y AUDITOR
+* `GET /api/invoices` — OPERADOR y AUDITOR. Lista paginada y permite buscar por cliente o tipo.
 * `GET /api/invoices/{id}` — detalle + `totalInWords` (SOAP)
+
+Parámetros opcionales del listado:
+
+* `q` — texto del cliente, o tipo exacto (`NACIONAL`, `EXPORTACION`, `GUBERNAMENTAL`), sin distinción entre mayúsculas y minúsculas.
+* `page` — página desde `0` (por defecto `0`).
+* `size` — cantidad de resultados por página (por defecto `10`).
+* `sort` — orden Spring Data, por defecto `createdAt,desc`.
+
+Ejemplo: `GET /api/invoices?q=Acme&page=0&size=10`.
 
 ### Dashboard (Python — usar esto en el front)
 
