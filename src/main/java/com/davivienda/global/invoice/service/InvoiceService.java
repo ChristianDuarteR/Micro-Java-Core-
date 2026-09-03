@@ -11,6 +11,7 @@ import com.davivienda.global.invoice.event.InvoiceEventHub;
 import com.davivienda.global.invoice.exception.BusinessException;
 import com.davivienda.global.invoice.exception.ResourceNotFoundException;
 import com.davivienda.global.invoice.repository.InvoiceRepository;
+import com.davivienda.global.invoice.repository.ClientRepository;
 import com.davivienda.global.invoice.soap.NumberConversionClient;
 import com.davivienda.global.invoice.tax.TaxResult;
 import com.davivienda.global.invoice.tax.TaxStrategyRegistry;
@@ -30,6 +31,7 @@ public class InvoiceService {
     private static final Logger log = LoggerFactory.getLogger(InvoiceService.class);
 
     private final InvoiceRepository invoiceRepository;
+    private final ClientRepository clientRepository;
     private final TaxStrategyRegistry taxStrategyRegistry;
     private final NumberConversionClient numberConversionClient;
     private final InvoiceEventHub invoiceEventHub;
@@ -37,12 +39,14 @@ public class InvoiceService {
 
     public InvoiceService(
             InvoiceRepository invoiceRepository,
+            ClientRepository clientRepository,
             TaxStrategyRegistry taxStrategyRegistry,
             NumberConversionClient numberConversionClient,
             InvoiceEventHub invoiceEventHub,
             MetricsEventClient metricsEventClient
     ) {
         this.invoiceRepository = invoiceRepository;
+        this.clientRepository = clientRepository;
         this.taxStrategyRegistry = taxStrategyRegistry;
         this.numberConversionClient = numberConversionClient;
         this.invoiceEventHub = invoiceEventHub;
@@ -61,7 +65,9 @@ public class InvoiceService {
                 .withholding(tax.withholding())
                 .total(tax.total())
                 .customsCode(request.type() == InvoiceType.EXPORTACION ? request.customsCode() : null)
-                .clientName(request.clientName().trim())
+                .client(clientRepository.findById(request.clientId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cliente no encontrado: " + request.clientId())))
                 .description(request.description())
                 .createdAt(Instant.now())
                 .createdBy(createdBy)
@@ -90,7 +96,7 @@ public class InvoiceService {
         } else {
             InvoiceType type = parseType(normalizedQuery);
             invoices = type == null
-                    ? invoiceRepository.findByClientNameContainingIgnoreCase(normalizedQuery, pageable)
+                    ? invoiceRepository.findByClient_NameContainingIgnoreCase(normalizedQuery, pageable)
                     : invoiceRepository.findByType(type, pageable);
         }
         return invoices.map(InvoiceResponse::from);

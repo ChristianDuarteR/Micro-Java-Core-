@@ -59,7 +59,7 @@ public class InvoiceController {
                                     {
                                       "type": "NACIONAL",
                                       "subtotal": 100.00,
-                                      "clientName": "Acme",
+                                      "clientId": 1,
                                       "description": "Servicio"
                                     }
                                     """),
@@ -67,7 +67,7 @@ public class InvoiceController {
                                     {
                                       "type": "EXPORTACION",
                                       "subtotal": 200.00,
-                                      "clientName": "Overseas Ltd",
+                                      "clientId": 2,
                                       "customsCode": "ADU-001"
                                     }
                                     """),
@@ -75,7 +75,7 @@ public class InvoiceController {
                                     {
                                       "type": "GUBERNAMENTAL",
                                       "subtotal": 100.00,
-                                      "clientName": "Ministerio"
+                                      "clientId": 3
                                     }
                                     """)
                     })

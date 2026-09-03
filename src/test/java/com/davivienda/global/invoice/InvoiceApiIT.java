@@ -75,7 +75,7 @@ class InvoiceApiIT {
                                 {
                                   "type": "NACIONAL",
                                   "subtotal": 100,
-                                  "clientName": "Acme"
+                                  "clientId": 1
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -89,7 +89,7 @@ class InvoiceApiIT {
                                 {
                                   "type": "NACIONAL",
                                   "subtotal": 10,
-                                  "clientName": "Acme"
+                                  "clientId": 1
                                 }
                                 """))
                 .andExpect(status().isForbidden());
@@ -109,7 +109,7 @@ class InvoiceApiIT {
                                 {
                                   "type": "EXPORTACION",
                                   "subtotal": 100,
-                                  "clientName": "Acme"
+                                  "clientId": 1
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
@@ -126,7 +126,7 @@ class InvoiceApiIT {
                                 {
                                   "type": "GUBERNAMENTAL",
                                   "subtotal": 100,
-                                  "clientName": "Gobierno"
+                                  "clientId": 3
                                 }
                                 """))
                 .andExpect(status().isCreated())

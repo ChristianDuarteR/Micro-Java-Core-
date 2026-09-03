@@ -60,7 +60,7 @@ class InvoiceControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type":"NACIONAL","subtotal":100,"clientName":"Acme"}
+                                {"type":"NACIONAL","subtotal":100,"clientId":1}
                                 """))
                 .andExpect(status().isCreated());
     }
