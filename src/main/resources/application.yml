@@ -1,0 +1,55 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: global-invoice-core
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:global_invoice}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres_password}
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    disable-swagger-default-url: true
+    persist-authorization: true
+    tags-sorter: alpha
+    operations-sorter: method
+
+logging:
+  level:
+    com.davivienda.global.invoice.soap: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+jwt:
+  secret: ${JWT_SECRET:super_secret_key_global_invoice_12345}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+soap:
+  number-conversion-url: ${SOAP_NUMBER_CONVERSION_URL:https://www.dataaccess.com/webservicesserver/NumberConversion.wso}
+
+metrics:
+  base-url: ${METRICS_BASE_URL:http://python-metrics-ms:5000}
+  internal-key: ${INTERNAL_API_KEY:global-invoice-internal-key}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
