@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/invoices").hasRole("OPERADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/invoices", "/api/invoices/").hasRole("OPERADOR")
                         .requestMatchers(HttpMethod.GET, "/api/invoices", "/api/invoices/**")
                         .hasAnyRole("OPERADOR", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/clients", "/api/clients/**")
