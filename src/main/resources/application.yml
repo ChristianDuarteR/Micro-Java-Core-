@@ -52,4 +52,4 @@ metrics:
 
 app:
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+    allowed-origins: ${CORS_ORIGINS:https://micro-python.onrender.com,https://global-invoice-virid.vercel.app}
