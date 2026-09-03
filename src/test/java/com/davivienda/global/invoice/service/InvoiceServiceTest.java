@@ -61,6 +61,7 @@ class InvoiceServiceTest {
 
     @Test
     void createNacionalPublishesEvent() {
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(Client.builder().id(1L).name("Acme").build()));
         when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
             Invoice invoice = invocation.getArgument(0);
             invoice.setId(1L);
