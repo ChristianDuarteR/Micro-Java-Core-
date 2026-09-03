@@ -24,10 +24,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@3a4728e2025c27f3d45ef27271e892c9431e78eb # v4.8.0
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
@@ -44,25 +44,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@3a4728e2025c27f3d45ef27271e892c9431e78eb # v4.8.0
+        uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "zulu"
 
       - name: Cache SonarQube packages
-        uses: actions/cache@11d8d2e981b1dca3922f30b91e92d9d93652885d # v4.3.0
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Cache Maven packages
-        uses: actions/cache@11d8d2e981b1dca3922f30b91e92d9d93652885d # v4.3.0
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -71,4 +71,4 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=ChristianDuarteR_Micro-Java-Core
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=ChristianDuarteR_Micro-Java-Core -Dsonar.organization=christianduarter -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
