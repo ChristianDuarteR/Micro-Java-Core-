@@ -1,0 +1,30 @@
+name: Java CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run tests and coverage
+        run: ./mvnw -B verify
+        shell: bash
+
+      - name: Build Docker image
+        run: docker build -t global-invoice-java:${{ github.sha }} .
