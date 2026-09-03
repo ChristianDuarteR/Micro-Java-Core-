@@ -24,6 +24,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -116,6 +118,41 @@ class InvoiceServiceTest {
         when(invoiceRepository.findAll()).thenReturn(List.of(invoice));
 
         assertThat(invoiceService.findAll()).hasSize(1).first().extracting("id").isEqualTo(7L);
+    }
+
+    @Test
+    void findPageSearchesByClient() {
+        Invoice invoice = Invoice.builder()
+                .id(8L)
+                .type(InvoiceType.NACIONAL)
+                .subtotal(new BigDecimal("100.00"))
+                .iva(new BigDecimal("19.00"))
+                .withholding(new BigDecimal("0.00"))
+                .total(new BigDecimal("119.00"))
+                .clientName("Acme Corp")
+                .createdAt(Instant.now())
+                .createdBy("operador")
+                .build();
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        when(invoiceRepository.findByClientNameContainingIgnoreCase("Acme", pageRequest))
+                .thenReturn(new PageImpl<>(List.of(invoice), pageRequest, 1));
+
+        var page = invoiceService.findPage(" Acme ", pageRequest);
+
+        assertThat(page.getContent()).hasSize(1).first().extracting("clientName").isEqualTo("Acme Corp");
+        verify(invoiceRepository).findByClientNameContainingIgnoreCase("Acme", pageRequest);
+    }
+
+    @Test
+    void findPageSearchesByType() {
+        PageRequest pageRequest = PageRequest.of(1, 5);
+        when(invoiceRepository.findByType(InvoiceType.EXPORTACION, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+
+        var page = invoiceService.findPage("exportacion", pageRequest);
+
+        assertThat(page).isEmpty();
+        verify(invoiceRepository).findByType(InvoiceType.EXPORTACION, pageRequest);
     }
 
     @Test
