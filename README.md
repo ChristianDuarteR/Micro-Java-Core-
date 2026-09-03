@@ -1,47 +1,128 @@
 # 📄 Global-Invoice — Microservicio Core (Java / Spring Boot)
 
-Microservicio backend encargado de la gestión transaccional de facturas, aplicación del motor dinámico de tributación y la comunicación con el servicio público gubernamental SOAP para auditoría de importes.
+Microservicio transaccional de facturas: motor tributario dinámico (Strategy / SOLID), CRUD, JWT con RBAC y puente SOAP → JSON para el front.
+
+Comparte PostgreSQL con el micro de métricas en Python. Este servicio **escribe** facturas; Python solo **agrega** para el dashboard.
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías
 
-* **Lenguaje:** Java 17+
-* **Framework:** Spring Boot 3.x
-* **Persistencia:** Spring Data JPA / PostgreSQL
-* **Seguridad:** Spring Security + JWT
-* **Gestor de dependencias:** Apache Maven
-* **Contenedorización:** Docker / Docker Compose
-
----
-
-## 💡 Funcionalidades Principales
-
-* **RF-01 Motor Dinámico de Tributación:** Implementación del patrón de diseño **Strategy** para el cálculo dinámico de totales según el tipo de factura (Nacional, Exportación, Gubernamental) respetando los principios SOLID (Open/Closed)[cite: 1].
-* **RF-03 Auditoría Legacy (SOAP):** Integración con el servicio WSDL público de *DataFlex (NumberConversion)* para la conversión del monto total a texto[cite: 1].
-* **RF-05 Seguridad RBAC:** Protección de endpoints mediante tokens JWT con roles `OPERADOR` y `AUDITOR`[cite: 1].
+* Java 17 · Spring Boot 4.1 · Spring Data JPA · PostgreSQL
+* Spring Security + JWT
+* SOAP DataFlex NumberConversion (consumido en backend)
+* JWT + RBAC
+* Aviso interno al micro Python al crear factura (`POST /internal/events/invoice-created`)
+* SSE opcional (`/api/invoices/events`); el dashboard del front debe usar el **WebSocket de Python**
+* JaCoCo (umbral 80%) · Docker · GitHub Actions
 
 ---
 
-## 🚀 Instalación y Ejecución Local
+## Contrato para Angular y Python
 
-### Prerrequisitos
-* Java JDK 17 o superior.
-* Apache Maven.
-* Docker Desktop y la red externa `global-invoice-net` activa (`docker network create global-invoice-net`).
+### Auth
 
-### 1. Variables de Entorno (`.env`)
-Crea un archivo `.env` en la raíz del proyecto basándote en la plantilla:
-```env
-PORT=8080
-DB_HOST=postgres-db
-DB_PORT=5432
-DB_NAME=global_invoice
-DB_USER=postgres
-DB_PASSWORD=postgres_password
-JWT_SECRET=super_secret_key_global_invoice_12345
+`POST /api/auth/login`
 
-### Ejecutar con Docker 
+```json
+{ "username": "operador", "password": "Operador123!" }
+```
 
+Respuesta: `{ "token", "username", "role" }` (`OPERADOR` | `AUDITOR`).
+
+Usuarios semilla:
+
+| Usuario   | Password       | Rol       | Puede crear | Listado | Dashboard (front) |
+|-----------|----------------|-----------|-------------|---------|-------------------|
+| operador  | Operador123!   | OPERADOR  | Sí          | Sí      | No                |
+| auditor   | Auditor123!    | AUDITOR   | No          | Sí      | Sí                |
+
+Header: `Authorization: Bearer <token>`.
+
+Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) — Authorize con el JWT. OpenAPI: `/v3/api-docs`.
+
+### Facturas
+
+* `POST /api/invoices` — **OPERADOR**
+* `GET /api/invoices` — OPERADOR y AUDITOR
+* `GET /api/invoices/{id}` — detalle + `totalInWords` (SOAP)
+
+### Dashboard (Python — usar esto en el front)
+
+* `GET http://localhost:5000/api/v1/metrics/by-type` — **AUDITOR**, `Authorization: Bearer <jwt>`
+* `WS ws://localhost:5000/ws/metrics?token=<jwt>` — snapshot al conectar; push al crear factura
+* Claim JWT: `role` = `ROLE_AUDITOR` | `ROLE_OPERADOR` (mismo `JWT_SECRET` que Python)
+
+No hace falta SSE de Java ni refetch a BD: el WS de Python ya empuja el agregado.
+
+### Tabla `invoices` (Python)
+
+Columnas: `id`, `invoice_type`, `subtotal`, `iva`, `withholding`, `total`, `customs_code`, `client_name`, `description`, `created_at`, `created_by`.
+
+Al crear, Java notifica a Python:
+
+`POST {METRICS_BASE_URL}/internal/events/invoice-created`  
+Header `X-Internal-Key: {INTERNAL_API_KEY}`  
+`{"invoice_type":"NACIONAL","total":"119.00"}`
+
+Copia el mismo `JWT_SECRET` e `INTERNAL_API_KEY` del `.env` de Python.
+
+#### Alta
+
+```json
+{
+  "type": "NACIONAL | EXPORTACION | GUBERNAMENTAL",
+  "subtotal": 100.00,
+  "clientName": "Acme",
+  "customsCode": "solo EXPORTACION, obligatorio",
+  "description": "opcional"
+}
+```
+
+Si el tipo no es `EXPORTACION`, `customsCode` no se persiste (el front no debe enviarlo).
+
+Cálculos (Open/Closed: una clase Strategy por tipo, registro automático):
+
+* Nacional: subtotal + 19% IVA
+* Exportación: subtotal + 0% IVA
+* Gubernamental: subtotal + 19% IVA − 5% retención sobre el subtotal
+
+### Tabla `invoices` (Python)
+
+Columnas: `id`, `invoice_type`, `subtotal`, `iva`, `withholding`, `total`, `customs_code`, `client_name`, `description`, `created_at`, `created_by`.
+
+Métricas: `SELECT invoice_type, SUM(total) FROM invoices GROUP BY invoice_type`.
+
+Tiempo real (RF-04): el auditor se conecta al WebSocket de Python; Java avisa al crear y Python empuja el gráfico **sin** nueva consulta HTTP a la BD.
+
+---
+
+## Ejecución local
+
+Red Docker (compartida con Postgres y Python):
+
+```bash
+docker network create global-invoice-net
+```
+
+Postgres (carpeta `mysql/docker-compose.yml` del repo) y luego:
+
+```bash
 docker compose up --build
+```
 
+Health: `GET http://localhost:8080/api/health`
+
+Tests:
+
+```bash
+mvn -B verify
+```
+
+---
+
+## Nuevo tipo de factura (sin tocar cálculos existentes)
+
+1. Valor en `InvoiceType`.
+2. Nueva clase `@Component` que implemente `TaxCalculationStrategy`.
+3. El `TaxStrategyRegistry` la descubre sola.
